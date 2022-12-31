@@ -23,7 +23,7 @@ class TwitterCacheTraceParser:
         operation = csv[5]
         key = csv[1] + "a"
         value_size = int(csv[3])
-        synthetic_value = "".zfill(value_size)
+        synthetic_value = chr(130) * value_size
 
         client_id = csv[4]
         ttl = csv[6]
@@ -155,9 +155,15 @@ class AsyncPlayer:
             # handle the remaining lines
             await self.dispatch_batches()
 
-    async def print_stats(self):
+    async def print_stats(self):        
         info = await self.redis_client.execute_command("info", "stats")
-        print(f"{datetime.now()}: {info}")
+        print(f"{datetime.now()} Stats:\n{info}")
+        info = await self.redis_client.execute_command("info", "memory")
+        print(f"{datetime.now()} Memory:\n{info}")
+        info = await self.redis_client.execute_command("info", "keyspace")
+        print(f"{datetime.now()} Keyspace:\n{info}")
+        info = await self.redis_client.execute_command("info", "Clients")
+        print(f"{datetime.now()} Clients:\n{info}")
 
     async def report_stats(self):
         while True:
@@ -176,7 +182,7 @@ class AsyncPlayer:
         stats_task = asyncio.create_task(self.report_stats())
 
         await read_dispatch_task
-        print(f"finished reading {csv_file}")
+        print(f"{datetime.now()}: finished reading {csv_file}")
 
         await self.worker_pool.stop()
         stats_task.cancel()
